@@ -28,7 +28,6 @@ export interface User {
   avatarColor: string; // e.g., 'bg-blue-500'
   isOnline?: boolean;
   status: string;
-  // New properties for secure sharing
   profileLinkToken: string;
   linkExpiry: LinkExpiry;
   isLinkActive: boolean;
@@ -36,12 +35,27 @@ export interface User {
   rejectedUserIds: string[];
 }
 
+export type MessageType = 'text' | 'audio' | 'image' | 'video' | 'system';
+
 export interface Message {
     id: string;
-    text: string;
     senderId: string;
     timestamp: string;
+    type: MessageType;
+    text?: string;
+    url?: string;
+    meta?: {
+        duration?: string;
+        fileName?: string;
+        fileSize?: number;
+        mimeType?: string;
+    }
 }
+
+export type MessagePayload = 
+    { type: 'text', text: string } | 
+    { type: 'audio' | 'image' | 'video', url: string, meta: Message['meta'] };
+
 
 export type ConversationType = 'dm' | 'group';
 
@@ -53,16 +67,110 @@ export interface Conversation {
     messages: Message[];
 }
 
+export interface Product {
+    id: string;
+    name: string;
+    sellerId: string;
+    price: number;
+    unit: 'kg' | 'bunch' | 'bag';
+    imageUrl: string;
+    crop: Crop;
+    dateAdded: string;
+}
+
+export interface Alert {
+    id: string;
+    title: string;
+    description: string;
+    type: 'warning' | 'info' | 'announcement';
+    date: string;
+}
+
+export interface MarketTrendData {
+    month: string;
+    price: number;
+}
+
+export interface Comment {
+    id: string;
+    authorId: string;
+    timestamp: string;
+    content: string;
+}
+
+export interface Post {
+    id: string;
+    authorId: string;
+    timestamp: string;
+    content: string;
+    imageUrl?: string;
+    likes: number;
+    comments: Comment[];
+}
+
+export interface FarmlandPlot {
+    id: string;
+    locationName: string;
+    district: string;
+    size: string; // e.g. "2 Hectares"
+    soilType: string;
+    price: string; // e.g. "RWF 500,000 / year"
+    ownerId: string;
+    imageUrl: string;
+    coords: { x: number, y: number }; // Percentage-based coordinates for SVG map
+}
+
 export interface Translations {
     header: {
         title: string;
         language: string;
         dashboard: string;
         chat: string;
+        community: string;
         settings: string;
+        findLand: string;
     };
     dashboard: {
         title: string;
+        quickActions: {
+            title: string;
+            addProduct: string;
+            sendMessage: string;
+            search: string;
+        };
+        userStats: {
+            title: string;
+            productsSold: string;
+            connections: string;
+        };
+        activityFeed: {
+            title: string;
+            newMessageFrom: string;
+            newMessageIn: string;
+            connectionRequestFrom: string;
+            accept: string;
+            reject: string;
+            viewChat: string;
+            noActivity: string;
+            sentAnImage: string;
+            sentAVideo: string;
+            sentAVoiceMessage: string;
+        };
+        marketplace: {
+            title: string;
+            newlyAdded: string;
+            marketMovers: string;
+            viewAll: string;
+        };
+        marketTrends: {
+            title: string;
+            priceHistoryFor: string;
+            selectCrop: string;
+        };
+        alerts: {
+            title: string;
+            noAlerts: string;
+        };
     };
     weather: {
         title: string;
@@ -79,6 +187,18 @@ export interface Translations {
         tipIntro: string;
         error: string;
     };
+     community: {
+        title: string;
+        newPostPlaceholder: string;
+        postButton: string;
+        like: string;
+        comment: string;
+        addCommentPlaceholder: string;
+        noPosts: string;
+        viewAllComments: string;
+        comments: string;
+        addImage: string;
+    };
     chat: {
         title: string;
         groupName: string;
@@ -93,6 +213,8 @@ export interface Translations {
         startChat: string;
         noUsers: string;
         chatStartedSystemMessage: string; // Takes one argument: user name
+        cancel: string;
+        recording: string;
     };
     settings: {
         title: string;
@@ -106,6 +228,8 @@ export interface Translations {
         blockedUsersDescription: string;
         theme: string;
         themeDescription: string;
+        chatAppearance: string;
+        chatAppearanceDescription: string;
         language: string;
         languageDescription: string;
         privacy: string;
@@ -116,6 +240,17 @@ export interface Translations {
         accountDescription: string;
         help: string;
         helpDescription: string;
+        findLand: {
+            title: string;
+            description: string;
+            filterByDistrict: string;
+            allDistricts: string;
+            noPlotsFound: string;
+            size: string;
+            soil: string;
+            contactOwner: string;
+            plotDetails: string;
+        };
         // Profile
         editProfile: string;
         editPhoto: string;
@@ -132,6 +267,15 @@ export interface Translations {
         // Theme
         light: string;
         dark: string;
+        // Chat Appearance
+        chatBackground: string;
+        presetImages: string;
+        gradients: string;
+        solidColors: string;
+        uploadYourOwn: string;
+        uploadFromDevice: string;
+        takeAPicture: string;
+        resetToDefault: string;
         // Language
         english: string;
         kinyarwanda: string;
@@ -206,4 +350,11 @@ export interface NotificationSettings {
     groups: boolean;
     sound: boolean;
     vibration: boolean;
+}
+
+export type BackgroundType = 'preset' | 'gradient' | 'upload' | 'color';
+
+export interface ChatSettings {
+    backgroundType: BackgroundType;
+    backgroundValue: string; // URL for preset/upload, CSS for gradient, or hex for color
 }

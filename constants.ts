@@ -1,4 +1,4 @@
-import { Language, Translations, Crop, User, Conversation } from './types';
+import { Language, Translations, Crop, User, Conversation, Product, Alert, MarketTrendData, ChatSettings, FarmlandPlot, Post } from './types';
 
 export const CROP_OPTIONS = Object.values(Crop);
 
@@ -8,14 +8,57 @@ export const AI_USER_ID = 'user-ai';
 const generateToken = () => Math.random().toString(36).substring(2, 12);
 
 export const INITIAL_USERS: Record<string, User> = {
-    [CURRENT_USER_ID]: { id: CURRENT_USER_ID, name: 'You', role: 'You', avatarColor: 'bg-green-500', isOnline: true, status: "Farming is life! 🌱", profileLinkToken: generateToken(), linkExpiry: '7d', isLinkActive: true, connectionRequests: [], rejectedUserIds: [] },
+    [CURRENT_USER_ID]: { id: CURRENT_USER_ID, name: 'You', role: 'You', avatarColor: 'bg-green-500', isOnline: true, status: "Farming is life! 🌱", profileLinkToken: generateToken(), linkExpiry: '7d', isLinkActive: true, connectionRequests: [
+        { fromUserId: 'user-john', timestamp: new Date(Date.now() - 86400000 * 2).toISOString(), status: 'accepted' },
+        { fromUserId: 'user-sylvie', timestamp: new Date(Date.now() - 3600000).toISOString(), status: 'pending' }
+    ], rejectedUserIds: [] },
     [AI_USER_ID]: { id: AI_USER_ID, name: 'AI Farming Assistant', role: 'AI Assistant', avatarColor: 'bg-teal-500', isOnline: true, status: "Here to help with your crops.", profileLinkToken: generateToken(), linkExpiry: 'never', isLinkActive: false, connectionRequests: [], rejectedUserIds: [] },
-    'user-john': { id: 'user-john', name: 'John', role: 'Farmer', avatarColor: 'bg-blue-500', isOnline: true, status: "Getting ready for the maize season.", profileLinkToken: generateToken(), linkExpiry: '7d', isLinkActive: true, connectionRequests: [{fromUserId: 'user-sylvie', timestamp: new Date(Date.now() - 3600000).toISOString(), status: 'pending'}], rejectedUserIds: [] },
-    'user-maria': { id: 'user-maria', name: 'Maria', role: 'Buyer', avatarColor: 'bg-purple-500', isOnline: false, status: "Looking for fresh produce.", profileLinkToken: generateToken(), linkExpiry: '24h', isLinkActive: true, connectionRequests: [], rejectedUserIds: ['user-peter'] },
-    'user-peter': { id: 'user-peter', name: 'Peter', role: 'Farmer', avatarColor: 'bg-orange-500', isOnline: true, status: "Coffee farmer from the Western Province.", profileLinkToken: generateToken(), linkExpiry: 'never', isLinkActive: false, connectionRequests: [], rejectedUserIds: [] },
-    'user-sylvie': { id: 'user-sylvie', name: 'Sylvie', role: 'Farmer', avatarColor: 'bg-pink-500', isOnline: false, status: "Specializing in beans and potatoes.", profileLinkToken: generateToken(), linkExpiry: '3d', isLinkActive: true, connectionRequests: [], rejectedUserIds: [] },
-    'user-amani': { id: 'user-amani', name: 'Amani', role: 'Buyer', avatarColor: 'bg-indigo-500', isOnline: true, status: "Exporting coffee and tea.", profileLinkToken: generateToken(), linkExpiry: '7d', isLinkActive: true, connectionRequests: [], rejectedUserIds: [] },
+    'user-john': { id: 'user-john', name: 'John', role: 'Farmer', avatarColor: 'bg-blue-500', avatarUrl: '/images/avatar-john.jpg', isOnline: true, status: "Getting ready for the maize season.", profileLinkToken: generateToken(), linkExpiry: '7d', isLinkActive: true, connectionRequests: [], rejectedUserIds: [] },
+    'user-maria': { id: 'user-maria', name: 'Maria', role: 'Buyer', avatarColor: 'bg-purple-500', avatarUrl: '/images/avatar-maria.jpg', isOnline: false, status: "Looking for fresh produce.", profileLinkToken: generateToken(), linkExpiry: '24h', isLinkActive: true, connectionRequests: [], rejectedUserIds: ['user-peter'] },
+    'user-peter': { id: 'user-peter', name: 'Peter', role: 'Farmer', avatarColor: 'bg-orange-500', avatarUrl: '/images/avatar-peter.jpg', isOnline: true, status: "Coffee farmer from the Western Province.", profileLinkToken: generateToken(), linkExpiry: 'never', isLinkActive: false, connectionRequests: [{fromUserId: 'user-amani', timestamp: new Date(Date.now() - 3600000 * 5).toISOString(), status: 'pending'}], rejectedUserIds: [] },
+    'user-sylvie': { id: 'user-sylvie', name: 'Sylvie', role: 'Farmer', avatarColor: 'bg-pink-500', avatarUrl: '/images/avatar-sylvie.jpg', isOnline: false, status: "Specializing in beans and potatoes.", profileLinkToken: generateToken(), linkExpiry: '3d', isLinkActive: true, connectionRequests: [], rejectedUserIds: [] },
+    'user-amani': { id: 'user-amani', name: 'Amani', role: 'Buyer', avatarColor: 'bg-indigo-500', avatarUrl: '/images/avatar-amani.jpg', isOnline: true, status: "Exporting coffee and tea.", profileLinkToken: generateToken(), linkExpiry: '7d', isLinkActive: true, connectionRequests: [], rejectedUserIds: [] },
 };
+
+export const INITIAL_PRODUCTS: Product[] = [
+    { id: 'prod-1', name: 'Fresh Maize', sellerId: 'user-john', price: 300, unit: 'kg', imageUrl: '/images/maize.jpg', crop: Crop.MAIZE, dateAdded: new Date(Date.now() - 86400000).toISOString() },
+    { id: 'prod-2', name: 'Irish Potatoes', sellerId: 'user-sylvie', price: 500, unit: 'kg', imageUrl: '/images/potatoes.jpg', crop: Crop.POTATOES, dateAdded: new Date(Date.now() - 86400000 * 2).toISOString() },
+    { id: 'prod-3', name: 'Arabica Coffee Beans', sellerId: 'user-peter', price: 2500, unit: 'kg', imageUrl: '/images/coffee.jpg', crop: Crop.COFFEE, dateAdded: new Date(Date.now() - 86400000 * 3).toISOString() },
+    { id: 'prod-4', name: 'Red Beans', sellerId: 'user-sylvie', price: 600, unit: 'kg', imageUrl: '/images/beans.jpg', crop: Crop.BEANS, dateAdded: new Date(Date.now() - 86400000 * 4).toISOString() },
+];
+
+export const INITIAL_ALERTS: Alert[] = [
+    { id: 'alert-1', title: 'Maize Stalk Borer Warning', description: 'Increased pest activity reported in Eastern Province. Inspect your crops.', type: 'warning', date: new Date(Date.now() - 86400000).toISOString() },
+    { id: 'alert-2', 'title': 'New Fertilizer Subsidy', description: 'Government announces a new subsidy program for small-scale farmers. Contact your local cooperative.', type: 'announcement', date: new Date(Date.now() - 86400000 * 3).toISOString() },
+    { id: 'alert-3', 'title': 'Weather Advisory', description: 'Expect heavy rainfall over the next 48 hours. Ensure proper drainage.', type: 'info', date: new Date(Date.now() - 3600000).toISOString() },
+];
+
+export const MARKET_TREND_DATA: Record<Crop, MarketTrendData[]> = {
+    [Crop.MAIZE]: [
+        { month: 'Jan', price: 280 }, { month: 'Feb', price: 300 }, { month: 'Mar', price: 310 },
+        { month: 'Apr', price: 290 }, { month: 'May', price: 320 }, { month: 'Jun', price: 330 },
+    ],
+    [Crop.BEANS]: [
+        { month: 'Jan', price: 550 }, { month: 'Feb', price: 560 }, { month: 'Mar', price: 600 },
+        { month: 'Apr', price: 580 }, { month: 'May', price: 610 }, { month: 'Jun', price: 620 },
+    ],
+    [Crop.POTATOES]: [
+        { month: 'Jan', price: 480 }, { month: 'Feb', price: 500 }, { month: 'Mar', price: 490 },
+        { month: 'Apr', price: 510 }, { month: 'May', price: 520 }, { month: 'Jun', price: 530 },
+    ],
+    [Crop.CASSAVA]: [
+        { month: 'Jan', price: 200 }, { month: 'Feb', price: 210 }, { month: 'Mar', price: 220 },
+        { month: 'Apr', price: 230 }, { month: 'May', price: 225 }, { month: 'Jun', price: 240 },
+    ],
+    [Crop.COFFEE]: [
+        { month: 'Jan', price: 2300 }, { month: 'Feb', price: 2450 }, { month: 'Mar', price: 2500 },
+        { month: 'Apr', price: 2480 }, { month: 'May', price: 2550 }, { month: 'Jun', price: 2600 },
+    ],
+    [Crop.TEA]: [
+        { month: 'Jan', price: 1800 }, { month: 'Feb', price: 1850 }, { month: 'Mar', price: 1900 },
+        { month: 'Apr', price: 1880 }, { month: 'May', price: 1920 }, { month: 'Jun', price: 1950 },
+    ],
+}
 
 export const INITIAL_CONVERSATIONS: Conversation[] = [
     {
@@ -23,37 +66,102 @@ export const INITIAL_CONVERSATIONS: Conversation[] = [
         type: 'dm',
         participants: [CURRENT_USER_ID, AI_USER_ID],
         messages: [
-            { id: `msg-${Date.now() - 20000}`, senderId: AI_USER_ID, text: "Hello! I am your AI Farming Assistant. How can I help you today? You can ask me about planting schedules, pest control, or anything related to farming.", timestamp: new Date(Date.now() - 20000).toISOString() },
+            { id: `msg-${Date.now() - 20000}`, senderId: AI_USER_ID, text: "Hello! I am your AI Farming Assistant. How can I help you today? You can ask me about planting schedules, pest control, or anything related to farming.", timestamp: new Date(Date.now() - 20000).toISOString(), type: 'text' },
         ]
     },
     {
-        id: 'convo-1',
-        type: 'dm',
-        participants: [CURRENT_USER_ID, 'user-john'],
-        messages: [
-            { id: `msg-${Date.now() - 10000}`, senderId: 'user-john', text: "Hey! Are you going to the cooperative meeting tomorrow?", timestamp: new Date(Date.now() - 10000).toISOString() },
-            { id: `msg-${Date.now() - 5000}`, senderId: CURRENT_USER_ID, text: "Yes, I'll be there. See you then!", timestamp: new Date(Date.now() - 5000).toISOString() }
-        ]
-    },
-    {
-        id: 'convo-2',
+        id: 'convo-group-1',
         type: 'group',
         name: 'Farming Cooperative',
         participants: [CURRENT_USER_ID, 'user-john', 'user-maria', 'user-peter'],
         messages: [
-             { id: `msg-${Date.now() - 15000}`, senderId: 'user-maria', text: "Just a reminder that the new shipment of fertilizers has arrived.", timestamp: new Date(Date.now() - 15000).toISOString() },
-             { id: `msg-${Date.now() - 12000}`, senderId: 'user-peter', text: "Great news! Thanks for the update, Maria.", timestamp: new Date(Date.now() - 12000).toISOString() }
+             { id: `msg-${Date.now() - 15000}`, senderId: 'user-maria', text: "Just a reminder that the new shipment of fertilizers has arrived.", timestamp: new Date(Date.now() - 15000).toISOString(), type: 'text' },
+             { id: `msg-${Date.now() - 12000}`, senderId: 'user-peter', text: "Great news! Thanks for the update, Maria.", timestamp: new Date(Date.now() - 12000).toISOString(), type: 'text' }
         ]
     },
      {
-        id: 'convo-3',
+        id: 'convo-maria',
         type: 'dm',
         participants: [CURRENT_USER_ID, 'user-maria'],
         messages: [
-             { id: `msg-${Date.now() - 86400000}`, senderId: 'user-maria', text: "I'm interested in buying 50kg of your maize harvest. What's your best price?", timestamp: new Date(Date.now() - 86400000).toISOString() }
+             { id: `msg-${Date.now() - 86400000}`, senderId: 'user-maria', text: "I'm interested in buying 50kg of your maize harvest. What's your best price?", timestamp: new Date(Date.now() - 86400000).toISOString(), type: 'text' }
         ]
+    },
+    {
+        id: 'convo-john',
+        type: 'dm',
+        participants: [CURRENT_USER_ID, 'user-john'],
+        messages: [{
+            id: `msg-start-john-${Date.now()}`,
+            senderId: 'system',
+            text: `You are now connected with John.`,
+            timestamp: new Date(Date.now() - 86400000 * 2).toISOString(),
+            type: 'system'
+        }]
     }
 ];
+
+export const INITIAL_POSTS: Post[] = [
+    {
+        id: 'post-1',
+        authorId: 'user-john',
+        timestamp: new Date(Date.now() - 3600000 * 3).toISOString(),
+        content: "Just finished planting the new maize seeds for the season. The soil is looking great after the recent rains. Hoping for a bountiful harvest! 🌽",
+        imageUrl: '/images/maize-field.jpg',
+        likes: 15,
+        comments: [
+            { id: 'comment-1-1', authorId: 'user-sylvie', timestamp: new Date(Date.now() - 3600000 * 2).toISOString(), content: "Looks fantastic, John! I'm starting on my beans next week." },
+            { id: 'comment-1-2', authorId: 'user-peter', timestamp: new Date(Date.now() - 3600000 * 1).toISOString(), content: "Good luck! Let us know if you see any signs of stalk borers." }
+        ]
+    },
+    {
+        id: 'post-2',
+        authorId: 'user-sylvie',
+        timestamp: new Date(Date.now() - 86400000).toISOString(),
+        content: "Does anyone have a reliable contact for organic pesticides? I'm trying to avoid chemicals for my potatoes this year.",
+        likes: 8,
+        comments: [
+            { id: 'comment-2-1', authorId: 'user-maria', timestamp: new Date(Date.now() - 86400000 + 100000).toISOString(), content: "I have a great supplier in Musanze. I'll send you the details in a private message." },
+        ]
+    },
+];
+
+export const PRESET_BACKGROUNDS = {
+    'Farmland': 'https://images.unsplash.com/photo-1492931548296-3A8358535792?q=80&w=1080&auto=format&fit=crop',
+    'Market': 'https://images.unsplash.com/photo-1547489532-358bf2a3f0c9?q=80&w=1080&auto=format&fit=crop',
+    'Sunrise': 'https://images.unsplash.com/photo-1542273917363-3b1817865c27?q=80&w=1080&auto=format&fit=crop',
+};
+
+export const GRADIENT_BACKGROUNDS = {
+    'Green': 'linear-gradient(to top right, #c1dfc4, #deecdd)',
+    'Yellow': 'linear-gradient(to top right, #fff9c4, #fdd835)',
+    'Blue': 'linear-gradient(to top right, #bbdefb, #42a5f5)',
+};
+
+export const COLOR_BACKGROUNDS: Record<string, string> = {
+    'Default': '#F5F5F5',
+    'Mint': '#E0F2F1',
+    'Peach': '#FFE0B2',
+    'Lavender': '#E1BEE7',
+    'Sky': '#B3E5FC',
+    'Wheat': '#F0EAD6',
+};
+
+export const DEFAULT_CHAT_SETTINGS: ChatSettings = {
+    backgroundType: 'color',
+    backgroundValue: '#F5F5F5',
+};
+
+export const INITIAL_FARMLAND_DATA: FarmlandPlot[] = [
+    { id: 'plot-1', locationName: 'Gicumbi Hills', district: 'Gicumbi', size: '2 Hectares', soilType: 'Clay Loam', price: 'RWF 500,000 / year', ownerId: 'user-john', imageUrl: '/images/plot1.jpg', coords: { x: 60, y: 25 } },
+    { id: 'plot-2', locationName: 'Rwamagana Lakeside', district: 'Rwamagana', size: '5 Hectares', soilType: 'Sandy Loam', price: 'RWF 1,200,000 / year', ownerId: 'user-sylvie', imageUrl: '/images/plot2.jpg', coords: { x: 75, y: 55 } },
+    { id: 'plot-3', locationName: 'Musanze Valley', district: 'Musanze', size: '1.5 Hectares', soilType: 'Volcanic Soil', price: 'RWF 800,000 / year', ownerId: 'user-peter', imageUrl: '/images/plot3.jpg', coords: { x: 35, y: 20 } },
+    { id: 'plot-4', locationName: 'Huye Farmlands', district: 'Huye', size: '3 Hectares', soilType: 'Humic Acrisol', price: 'RWF 650,000 / year', ownerId: 'user-amani', imageUrl: '/images/plot4.jpg', coords: { x: 40, y: 75 } },
+    { id: 'plot-5', locationName: 'Karongi Lakeside', district: 'Karongi', size: '4 Hectares', soilType: 'Ferralsols', price: 'RWF 900,000 / year', ownerId: 'user-john', imageUrl: '/images/plot5.jpg', coords: { x: 15, y: 50 } },
+];
+
+export const RWANDA_DISTRICTS = ['Gicumbi', 'Rwamagana', 'Musanze', 'Huye', 'Karongi', 'Gasabo', 'Nyarugenge', 'Kicukiro'];
+
 
 export const translations: Record<Language, Translations> = {
     [Language.EN]: {
@@ -62,10 +170,51 @@ export const translations: Record<Language, Translations> = {
             language: 'Language',
             dashboard: 'Dashboard',
             chat: 'Chats',
+            community: 'Community',
             settings: 'Settings',
+            findLand: 'Find Land',
         },
         dashboard: {
             title: 'Farmer\'s Dashboard',
+            quickActions: {
+                title: 'Quick Actions',
+                addProduct: 'Add Product',
+                sendMessage: 'New Message',
+                search: 'Search',
+            },
+            userStats: {
+                title: 'My Stats',
+                productsSold: 'My Products',
+                connections: 'Connections',
+            },
+            activityFeed: {
+                title: 'Activity Feed',
+                newMessageFrom: 'New message from',
+                newMessageIn: 'New message in',
+                connectionRequestFrom: 'Connection request from',
+                accept: 'Accept',
+                reject: 'Reject',
+                viewChat: 'View',
+                noActivity: 'No recent activity.',
+                sentAnImage: 'Sent an image',
+                sentAVideo: 'Sent a video',
+                sentAVoiceMessage: 'Sent a voice message'
+            },
+            marketplace: {
+                title: 'Marketplace',
+                newlyAdded: 'Newly Added',
+                marketMovers: 'Market Movers',
+                viewAll: 'View All',
+            },
+            marketTrends: {
+                title: 'Market Trends',
+                priceHistoryFor: 'Price History for',
+                selectCrop: 'Select Crop',
+            },
+            alerts: {
+                title: 'Important Alerts',
+                noAlerts: 'No important alerts right now.',
+            },
         },
         weather: {
             title: 'Weather in Kigali',
@@ -82,6 +231,18 @@ export const translations: Record<Language, Translations> = {
             tipIntro: 'Here are some AI-generated tips for growing',
             error: 'Sorry, an error occurred while fetching tips. Please try again.',
         },
+        community: {
+            title: 'Community Feed',
+            newPostPlaceholder: "What's on your mind, farmer?",
+            postButton: 'Post',
+            like: 'Like',
+            comment: 'Comment',
+            addCommentPlaceholder: 'Write a comment...',
+            noPosts: 'No posts in the feed yet. Why not start the conversation?',
+            viewAllComments: 'View all {0} comments',
+            comments: 'Comments',
+            addImage: 'Add Image',
+        },
         chat: {
             title: 'Chats',
             groupName: 'Farming Cooperative',
@@ -96,6 +257,8 @@ export const translations: Record<Language, Translations> = {
             startChat: 'Start Chat',
             noUsers: 'No new users available to chat with.',
             chatStartedSystemMessage: 'You started a conversation with {0}.',
+            cancel: 'Cancel',
+            recording: 'Recording...'
         },
         settings: {
             title: 'Settings',
@@ -108,6 +271,8 @@ export const translations: Record<Language, Translations> = {
             blockedUsersDescription: 'Manage users you have blocked',
             theme: 'Appearance',
             themeDescription: 'Customize the look and feel',
+            chatAppearance: 'Chat Appearance',
+            chatAppearanceDescription: 'Customize the chat background',
             language: 'Language',
             languageDescription: 'Choose the app language',
             privacy: 'Privacy',
@@ -118,6 +283,17 @@ export const translations: Record<Language, Translations> = {
             accountDescription: 'Manage your account',
             help: 'Help & Support',
             helpDescription: 'Get help and report issues',
+            findLand: {
+                title: 'Find Available Farmland',
+                description: 'Browse plots of land for lease or sale',
+                filterByDistrict: 'Filter by District',
+                allDistricts: 'All Districts',
+                noPlotsFound: 'No plots found matching your criteria.',
+                size: 'Size',
+                soil: 'Soil',
+                contactOwner: 'Contact Owner',
+                plotDetails: 'Plot Details',
+            },
             editProfile: 'Edit Profile',
             editPhoto: 'Edit Photo',
             displayName: 'Display Name',
@@ -131,6 +307,14 @@ export const translations: Record<Language, Translations> = {
             selectUserToBlock: 'Select a user to block',
             light: 'Light',
             dark: 'Dark',
+            chatBackground: 'Chat Background',
+            presetImages: 'Preset Images',
+            gradients: 'Gradients',
+            solidColors: 'Solid Colors',
+            uploadYourOwn: 'Upload Your Own',
+            uploadFromDevice: 'Upload from Device',
+            takeAPicture: 'Take a Picture',
+            resetToDefault: 'Reset to Default',
             english: 'English',
             kinyarwanda: 'Kinyarwanda',
             whoCanContactMe: 'Who can contact me',
@@ -192,10 +376,51 @@ export const translations: Record<Language, Translations> = {
             language: 'Ururimi',
             dashboard: 'Imbonerahamwe',
             chat: 'Ibiganiro',
+            community: 'Umuryango',
             settings: 'Igenamiterere',
+            findLand: 'Shakisha Isambu',
         },
         dashboard: {
             title: 'Imbonerahamwe y\'Umuhinzi',
+            quickActions: {
+                title: 'Ibikurura vuba',
+                addProduct: 'Ongeraho Igicuruzwa',
+                sendMessage: 'Ubutumwa bushya',
+                search: 'Shakisha',
+            },
+            userStats: {
+                title: 'Imibare yanjye',
+                productsSold: 'Ibicuruzwa byanjye',
+                connections: 'Abo muhujwe',
+            },
+            activityFeed: {
+                title: 'Ibikorwa biheruka',
+                newMessageFrom: 'Ubutumwa bushya buvuye kuri',
+                newMessageIn: 'Ubutumwa bushya muri',
+                connectionRequestFrom: 'Icyifuzo cyo guhuzwa na',
+                accept: 'Emera',
+                reject: 'HAKANA',
+                viewChat: 'Reba',
+                noActivity: 'Nta gikorwa giheruka.',
+                sentAnImage: 'Yohereje ifoto',
+                sentAVideo: 'Yohereje amashusho',
+                sentAVoiceMessage: 'Yohereje ubutumwa bw\'ijwi'
+            },
+            marketplace: {
+                title: 'Isoko',
+                newlyAdded: 'Byongeweho vuba',
+                marketMovers: 'Ibihindura isoko',
+                viewAll: 'Reba Byose',
+            },
+            marketTrends: {
+                title: 'Uko isoko rihagaze',
+                priceHistoryFor: 'Amateka y\'ibiciro bya',
+                selectCrop: 'Hitamo igihingwa',
+            },
+            alerts: {
+                title: 'Imenyesha yihutirwa',
+                noAlerts: 'Nta menyesha yihutirwa ubu.',
+            },
         },
         weather: {
             title: 'Iteganyagihe i Kigali',
@@ -212,6 +437,18 @@ export const translations: Record<Language, Translations> = {
             tipIntro: 'Dore inama z\'ubwenge bwa mudasobwa zo guhinga',
             error: 'Tubiseguyeho, habaye ikibazo mu kubona inama. Nyamuneka ongera ugerageze.',
         },
+         community: {
+            title: 'Ibiganiro byo mu Muryango',
+            newPostPlaceholder: "Urifuza kuvuga iki, muhinzi?",
+            postButton: 'Tangaza',
+            like: 'Kunda',
+            comment: 'Gira icyo uvuga',
+            addCommentPlaceholder: 'Andika igitekerezo...',
+            noPosts: 'Nta bitangajwe biri mu rubuga. Watangiza ikiganiro?',
+            viewAllComments: 'Reba ibitekerezo byose {0}',
+            comments: 'Ibitekerezo',
+            addImage: 'Ongeraho Ifoto',
+        },
         chat: {
             title: 'Ibiganiro',
             groupName: 'Koperative y\'Abahinzi',
@@ -226,6 +463,8 @@ export const translations: Record<Language, Translations> = {
             startChat: 'Tangira Ikiganiro',
             noUsers: 'Nta bakoresha bashya babonetse bo kuganira na bo.',
             chatStartedSystemMessage: 'Watangiye ikiganiro na {0}.',
+            cancel: 'Hagarika',
+            recording: 'Turimo gufata amajwi...'
         },
         settings: {
             title: 'Igenamiterere',
@@ -238,6 +477,8 @@ export const translations: Record<Language, Translations> = {
             blockedUsersDescription: 'Genzura abantu wahagaritse',
             theme: 'Imigaragarire',
             themeDescription: 'Hindura uko porogaramu igaragara',
+            chatAppearance: "Imigaragarire y'Ikiganiro",
+            chatAppearanceDescription: "Hindura inyuma h'ikiganiro",
             language: 'Ururimi',
             languageDescription: 'Hitamo ururimi rwa porogaramu',
             privacy: 'Ibihanga n\'uburenganzira',
@@ -248,6 +489,17 @@ export const translations: Record<Language, Translations> = {
             accountDescription: 'Genzura konti yawe',
             help: 'Ubufasha',
             helpDescription: 'Shaka ubufasha cyangwa utange ikibazo',
+            findLand: {
+                title: 'Shakisha Amasambu Ahari',
+                description: 'Reba amasambu yo gukodesha cyangwa kugura',
+                filterByDistrict: 'Yungurura ku Karere',
+                allDistricts: 'Uturere twose',
+                noPlotsFound: 'Nta sambu ribonetse rijyanye n\'ibyo washatse.',
+                size: 'Ingano',
+                soil: 'Ubutaka',
+                contactOwner: 'Vugana na Nyirabyo',
+                plotDetails: 'Amakuru y\'Isambu',
+            },
             editProfile: 'Hindura Umwirondoro',
             editPhoto: 'Hindura Ifoto',
             displayName: 'Izina Rigaragara',
@@ -261,6 +513,14 @@ export const translations: Record<Language, Translations> = {
             selectUserToBlock: 'Hitamo umukoresha wo guhagarika',
             light: 'Umucyo',
             dark: 'Umwijima',
+            chatBackground: 'Inyuma h\'Ikiganiro',
+            presetImages: 'Amafoto ateguye',
+            gradients: 'Amabara Avangiye',
+            solidColors: 'Amabara Yuzuye',
+            uploadYourOwn: 'Ongeraho Iyawe',
+            uploadFromDevice: 'Ongeraho uvanye mu gikoresho',
+            takeAPicture: 'Fata Ifoto',
+            resetToDefault: 'Subiza ku Mwirondoro',
             english: 'Icyongereza',
             kinyarwanda: 'Ikinyarwanda',
             whoCanContactMe: 'Ninde ushobora kukwandikira',

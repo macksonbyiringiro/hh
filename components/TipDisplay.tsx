@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 interface TipDisplayProps {
@@ -27,8 +26,8 @@ export const TipDisplay: React.FC<TipDisplayProps> = ({ content }) => {
     };
 
     return (
-        <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-            <ul className="space-y-2 text-gray-700">
+        <div className="bg-green-50 dark:bg-green-900/30 p-4 rounded-lg border border-green-200 dark:border-green-800">
+            <ul className="space-y-2 text-gray-700 dark:text-gray-300">
                 {renderContent()}
             </ul>
         </div>

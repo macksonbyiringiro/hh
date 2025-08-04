@@ -1,6 +1,6 @@
 import React from 'react';
-import { SunIcon } from '../icons/SunIcon';
-import { CloudIcon } from '../icons/CloudIcon';
+import { SunIcon } from './icons/SunIcon';
+import { CloudIcon } from './icons/CloudIcon';
 
 interface WeatherCardProps {
     translations: {

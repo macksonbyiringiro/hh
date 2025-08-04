@@ -6,8 +6,8 @@ import { SunIcon } from './icons/SunIcon';
 import { DashboardIcon } from './icons/DashboardIcon';
 import { ChatIcon } from './icons/ChatIcon';
 import { SettingsIcon } from './icons/SettingsIcon';
+import { LANGUAGE_OPTIONS } from '../constants';
 import { MapIcon } from './icons/MapIcon';
-import { CommunityIcon } from './icons/CommunityIcon';
 
 interface HeaderProps {
     language: Language;
@@ -16,13 +16,12 @@ interface HeaderProps {
         title: string;
         language: string;
         dashboard: string;
+        map: string;
         chat: string;
-        community: string;
         settings: string;
-        findLand: string;
     };
-    activeView: 'dashboard' | 'chat' | 'settings' | 'land' | 'community';
-    setActiveView: (view: 'dashboard' | 'chat' | 'settings' | 'land' | 'community') => void;
+    activeView: 'dashboard' | 'map' | 'chat' | 'settings';
+    setActiveView: (view: 'dashboard' | 'map' | 'chat' | 'settings') => void;
     theme: 'light' | 'dark';
     toggleTheme: () => void;
     pendingRequestCount: number;
@@ -93,9 +92,8 @@ export const Header: React.FC<HeaderProps> = ({ language, setLanguage, translati
 
                     <div className="hidden sm:flex items-center space-x-4">
                         <NavItem label={translations.dashboard} isActive={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} icon={<DashboardIcon className="h-5 w-5" />} />
+                        <NavItem label={translations.map} isActive={activeView === 'map'} onClick={() => setActiveView('map')} icon={<MapIcon className="h-5 w-5" />} />
                         <NavItem label={translations.chat} isActive={activeView === 'chat'} onClick={() => setActiveView('chat')} icon={<ChatIcon className="h-5 w-5" />} />
-                        <NavItem label={translations.community} isActive={activeView === 'community'} onClick={() => setActiveView('community')} icon={<CommunityIcon className="h-5 w-5" />} />
-                        <NavItem label={translations.findLand} isActive={activeView === 'land'} onClick={() => setActiveView('land')} icon={<MapIcon className="h-5 w-5" />} />
                         <NavItem label={translations.settings} isActive={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<SettingsIcon className="h-5 w-5" />} badgeCount={pendingRequestCount}/>
                     </div>
 
@@ -118,8 +116,9 @@ export const Header: React.FC<HeaderProps> = ({ language, setLanguage, translati
                                  transition duration-150 ease-in-out"
                                 aria-label={translations.language}
                             >
-                                <option value={Language.EN}>English</option>
-                                <option value={Language.RW}>Kinyarwanda</option>
+                                {LANGUAGE_OPTIONS.map(({ code, name }) => (
+                                    <option key={code} value={code}>{name}</option>
+                                ))}
                             </select>
                             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700 dark:text-gray-400">
                                 <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
@@ -128,14 +127,14 @@ export const Header: React.FC<HeaderProps> = ({ language, setLanguage, translati
                     </div>
                 </div>
             </div>
-             {/* Bottom nav for mobile */}
-            <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t dark:border-gray-700 flex justify-around p-1 z-20">
+            
+            {/* Mobile Bottom Nav */}
+            <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 flex justify-around p-1 z-20">
                  <MobileNavItem label={translations.dashboard} isActive={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} icon={<DashboardIcon className="h-6 w-6" />} />
+                 <MobileNavItem label={translations.map} isActive={activeView === 'map'} onClick={() => setActiveView('map')} icon={<MapIcon className="h-6 w-6" />} />
                  <MobileNavItem label={translations.chat} isActive={activeView === 'chat'} onClick={() => setActiveView('chat')} icon={<ChatIcon className="h-6 w-6" />} />
-                 <MobileNavItem label={translations.community} isActive={activeView === 'community'} onClick={() => setActiveView('community')} icon={<CommunityIcon className="h-6 w-6" />} />
-                 <MobileNavItem label={translations.findLand} isActive={activeView === 'land'} onClick={() => setActiveView('land')} icon={<MapIcon className="h-6 w-6" />} />
-                 <MobileNavItem label={translations.settings} isActive={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<SettingsIcon className="h-6 w-6" />} badgeCount={pendingRequestCount}/>
-            </div>
+                 <MobileNavItem label={translations.settings} isActive={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<SettingsIcon className="h-6 w-6" />} badgeCount={pendingRequestCount} />
+            </nav>
         </header>
     );
 };

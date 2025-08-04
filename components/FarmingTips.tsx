@@ -1,8 +1,8 @@
 import React, { useState, useCallback } from 'react';
-import { Crop, Language } from '../../types';
-import { CROP_OPTIONS } from '../../constants';
-import { generateFarmingTipStream, isConfigured } from '../../services/geminiService';
-import { TipDisplay } from '../TipDisplay';
+import { Crop, Language } from '../types';
+import { CROP_OPTIONS } from '../constants';
+import { generateFarmingTipStream, isConfigured } from '../services/geminiService';
+import { TipDisplay } from './TipDisplay';
 
 interface FarmingTipsProps {
     translations: {

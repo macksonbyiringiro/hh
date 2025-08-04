@@ -1,14 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Header } from './components/Header';
-import { Language, User, ConnectionRequest, Conversation, PrivacySettings, NotificationSettings, Product, Alert, MarketTrendData, ChatSettings, Post, Comment } from './types';
-import { translations, INITIAL_USERS, INITIAL_CONVERSATIONS, CURRENT_USER_ID, INITIAL_PRODUCTS, INITIAL_ALERTS, MARKET_TREND_DATA, DEFAULT_CHAT_SETTINGS, INITIAL_POSTS } from './constants';
+import { Language, User, ConnectionRequest, Conversation, PrivacySettings, NotificationSettings, Plot } from './types';
+import { translations, INITIAL_USERS, INITIAL_CONVERSATIONS, CURRENT_USER_ID, INITIAL_PLOTS } from './constants';
 import DashboardPage from './components/DashboardPage';
 import ChatPage from './components/chat/ChatPage';
 import SettingsPage from './components/settings/SettingsPage';
-import FindLandPage from './components/settings/FindLandPage';
-import CommunityPage from './components/community/CommunityPage';
+import MapPage from './components/map/MapPage';
 
-type View = 'dashboard' | 'chat' | 'settings' | 'land' | 'community';
+type View = 'dashboard' | 'map' | 'chat' | 'settings';
 type Theme = 'light' | 'dark';
 
 const getFromStorage = <T,>(key: string, defaultValue: T): T => {
@@ -34,11 +33,7 @@ const App: React.FC = () => {
 
   const [users, setUsers] = useState<Record<string, User>>(() => getFromStorage<Record<string, User>>('users', INITIAL_USERS));
   const [conversations, setConversations] = useState<Conversation[]>(() => getFromStorage<Conversation[]>('conversations', INITIAL_CONVERSATIONS));
-  const [products, setProducts] = useState<Product[]>(() => getFromStorage<Product[]>('products', INITIAL_PRODUCTS));
-  const [alerts, setAlerts] = useState<Alert[]>(() => getFromStorage<Alert[]>('alerts', INITIAL_ALERTS));
-  const [posts, setPosts] = useState<Post[]>(() => getFromStorage<Post[]>('posts', INITIAL_POSTS));
-
-
+  const [plots, setPlots] = useState<Plot[]>(() => getFromStorage<Plot[]>('plots', INITIAL_PLOTS));
   const [blockedUsers, setBlockedUsers] = useState<string[]>(() => getFromStorage<string[]>('blockedUsers', []));
   const [privacySettings, setPrivacySettings] = useState<PrivacySettings>(() => getFromStorage<PrivacySettings>('privacySettings', {
       contact: 'everyone',
@@ -51,7 +46,6 @@ const App: React.FC = () => {
       sound: true,
       vibration: false
   }));
-   const [chatSettings, setChatSettings] = useState<ChatSettings>(() => getFromStorage<ChatSettings>('chatSettings', DEFAULT_CHAT_SETTINGS));
   
   const currentTranslations = useMemo(() => translations[language], [language]);
   const currentUser = useMemo(() => users[CURRENT_USER_ID], [users]);
@@ -63,16 +57,33 @@ const App: React.FC = () => {
     localStorage.setItem('theme', theme);
   }, [theme]);
   
-  useEffect(() => { localStorage.setItem('language', language); }, [language]);
-  useEffect(() => { localStorage.setItem('users', JSON.stringify(users)); }, [users]);
-  useEffect(() => { localStorage.setItem('conversations', JSON.stringify(conversations)); }, [conversations]);
-  useEffect(() => { localStorage.setItem('products', JSON.stringify(products)); }, [products]);
-  useEffect(() => { localStorage.setItem('alerts', JSON.stringify(alerts)); }, [alerts]);
-  useEffect(() => { localStorage.setItem('posts', JSON.stringify(posts)); }, [posts]);
-  useEffect(() => { localStorage.setItem('blockedUsers', JSON.stringify(blockedUsers)); }, [blockedUsers]);
-  useEffect(() => { localStorage.setItem('privacySettings', JSON.stringify(privacySettings)); }, [privacySettings]);
-  useEffect(() => { localStorage.setItem('notificationSettings', JSON.stringify(notificationSettings)); }, [notificationSettings]);
-  useEffect(() => { localStorage.setItem('chatSettings', JSON.stringify(chatSettings)); }, [chatSettings]);
+  useEffect(() => {
+      localStorage.setItem('language', language);
+  }, [language]);
+
+  useEffect(() => {
+      localStorage.setItem('users', JSON.stringify(users));
+  }, [users]);
+  
+  useEffect(() => {
+      localStorage.setItem('conversations', JSON.stringify(conversations));
+  }, [conversations]);
+
+  useEffect(() => {
+      localStorage.setItem('plots', JSON.stringify(plots));
+  }, [plots]);
+
+  useEffect(() => {
+      localStorage.setItem('blockedUsers', JSON.stringify(blockedUsers));
+  }, [blockedUsers]);
+  
+  useEffect(() => {
+      localStorage.setItem('privacySettings', JSON.stringify(privacySettings));
+  }, [privacySettings]);
+  
+  useEffect(() => {
+      localStorage.setItem('notificationSettings', JSON.stringify(notificationSettings));
+  }, [notificationSettings]);
 
 
   const toggleTheme = () => {
@@ -83,6 +94,7 @@ const App: React.FC = () => {
     const fromUser = users[request.fromUserId];
     if (!fromUser) return;
 
+    // 1. Update the request status for the current user
     setUsers(prevUsers => ({
       ...prevUsers,
       [CURRENT_USER_ID]: {
@@ -93,6 +105,7 @@ const App: React.FC = () => {
       },
     }));
 
+    // 2. Create a new conversation
     const newConversation: Conversation = {
       id: `convo-${CURRENT_USER_ID}-${fromUser.id}-${Date.now()}`,
       type: 'dm',
@@ -101,11 +114,13 @@ const App: React.FC = () => {
         id: `msg-start-${Date.now()}`,
         senderId: 'system',
         text: `You are now connected with ${fromUser.name}.`,
-        timestamp: new Date().toISOString(),
-        type: 'system'
+        timestamp: new Date().toISOString()
       }],
     };
     setConversations(prev => [newConversation, ...prev]);
+
+    // 3. Switch to chat view and open the new conversation
+    // This is handled inside the settings page for better UX
   };
 
   const handleRejectRequest = (request: ConnectionRequest) => {
@@ -116,6 +131,7 @@ const App: React.FC = () => {
         connectionRequests: prevUsers[CURRENT_USER_ID].connectionRequests.map(r =>
           r.fromUserId === request.fromUserId ? { ...r, status: 'rejected' } : r
         ),
+        // Add to rejected list to prevent future requests from this user
         rejectedUserIds: [...new Set([...prevUsers[CURRENT_USER_ID].rejectedUserIds, request.fromUserId])]
       },
     }));
@@ -137,37 +153,7 @@ const App: React.FC = () => {
     }));
   };
 
-  const handleAddNewPost = (content: string, imageUrl?: string) => {
-    const newPost: Post = {
-        id: `post-${Date.now()}`,
-        authorId: CURRENT_USER_ID,
-        timestamp: new Date().toISOString(),
-        content,
-        imageUrl,
-        likes: 0,
-        comments: [],
-    };
-    setPosts(prev => [newPost, ...prev]);
-  };
-
-  const handleAddNewComment = (postId: string, content: string) => {
-    const newComment: Comment = {
-        id: `comment-${Date.now()}`,
-        authorId: CURRENT_USER_ID,
-        timestamp: new Date().toISOString(),
-        content,
-    };
-    setPosts(prev => prev.map(p => 
-        p.id === postId ? { ...p, comments: [...p.comments, newComment] } : p
-    ));
-  };
-
-  const handleLikePost = (postId: string) => {
-     setPosts(prev => prev.map(p => 
-        p.id === postId ? { ...p, likes: p.likes + 1 } : p
-    ));
-  };
-
+  const mainContentHeight = "h-[calc(100vh-65px-4rem)] sm:h-[calc(100vh-65px-57px)]";
 
   return (
     <div className="min-h-screen bg-green-50 dark:bg-gray-900 font-sans text-gray-800 dark:text-gray-200">
@@ -182,27 +168,30 @@ const App: React.FC = () => {
         pendingRequestCount={currentUser.connectionRequests.filter(r => r.status === 'pending').length}
       />
       <main className="max-w-7xl mx-auto">
-        {activeView === 'dashboard' && <DashboardPage 
-            translations={currentTranslations} 
-            language={language}
-            currentUser={currentUser}
-            users={users}
-            conversations={conversations}
-            products={products}
-            alerts={alerts}
-            marketTrends={MARKET_TREND_DATA}
-            onAcceptRequest={handleAcceptRequest}
-            onRejectRequest={handleRejectRequest}
-            setActiveView={setActiveView}
-        />}
-        {activeView === 'chat' && <ChatPage 
-            translations={currentTranslations} 
-            language={language} 
-            users={users} 
-            conversations={conversations}
-            setConversations={setConversations}
-            chatSettings={chatSettings}
-        />}
+        {activeView === 'dashboard' && <DashboardPage translations={currentTranslations} language={language} />}
+        {activeView === 'map' && 
+          <div className={mainContentHeight}>
+            <MapPage 
+                translations={currentTranslations} 
+                plots={plots}
+                users={users}
+                setPlots={setPlots}
+                language={language}
+                currentUser={currentUser}
+            />
+          </div>
+        }
+        {activeView === 'chat' && 
+          <div className={mainContentHeight}>
+            <ChatPage 
+              translations={currentTranslations} 
+              language={language} 
+              users={users} 
+              conversations={conversations}
+              setConversations={setConversations}
+            />
+          </div>
+        }
         {activeView === 'settings' && 
             <SettingsPage
                 translations={currentTranslations}
@@ -219,31 +208,11 @@ const App: React.FC = () => {
                 setPrivacySettings={setPrivacySettings}
                 notificationSettings={notificationSettings}
                 setNotificationSettings={setNotificationSettings}
-                chatSettings={chatSettings}
-                setChatSettings={setChatSettings}
                 onAcceptRequest={handleAcceptRequest}
                 onRejectRequest={handleRejectRequest}
                 onSendRequest={handleSendConnectionRequest}
                 conversations={conversations}
                 setActiveView={setActiveView}
-            />
-        }
-        {activeView === 'land' &&
-            <FindLandPage
-                translations={currentTranslations}
-                users={users}
-                setActiveView={setActiveView}
-            />
-        }
-        {activeView === 'community' &&
-            <CommunityPage
-                translations={currentTranslations}
-                currentUser={currentUser}
-                users={users}
-                posts={posts}
-                onAddNewPost={handleAddNewPost}
-                onAddNewComment={handleAddNewComment}
-                onLikePost={handleLikePost}
             />
         }
       </main>

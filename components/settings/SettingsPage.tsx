@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Language, Translations, User, PrivacySettings, NotificationSettings, ConnectionRequest, LinkExpiry, Conversation } from '../../types';
-import { CURRENT_USER_ID, AI_USER_ID } from '../../constants';
+import { Language, Translations, User, PrivacySettings, NotificationSettings, ConnectionRequest, LinkExpiry, Conversation, ChatSettings } from '../../types';
+import { CURRENT_USER_ID, PRESET_BACKGROUNDS, GRADIENT_BACKGROUNDS, DEFAULT_CHAT_SETTINGS, COLOR_BACKGROUNDS } from '../../constants';
 
 import { ChevronRightIcon } from '../icons/ChevronRightIcon';
 import { UserCircleIcon } from '../icons/UserCircleIcon';
@@ -19,6 +19,8 @@ import { LinkIcon } from '../icons/LinkIcon';
 import { QrCodeIcon } from '../icons/QrCodeIcon';
 import { CopyIcon } from '../icons/CopyIcon';
 import { CheckCircleIcon } from '../icons/CheckCircleIcon';
+import { PaintBrushIcon } from '../icons/PaintBrushIcon';
+import FindLandPage from './FindLandPage';
 
 
 type SettingsPageProps = {
@@ -36,14 +38,16 @@ type SettingsPageProps = {
     setPrivacySettings: React.Dispatch<React.SetStateAction<PrivacySettings>>;
     notificationSettings: NotificationSettings;
     setNotificationSettings: React.Dispatch<React.SetStateAction<NotificationSettings>>;
+    chatSettings: ChatSettings;
+    setChatSettings: React.Dispatch<React.SetStateAction<ChatSettings>>;
     onAcceptRequest: (request: ConnectionRequest) => void;
     onRejectRequest: (request: ConnectionRequest) => void;
     onSendRequest: (toUserId: string) => void;
     conversations: Conversation[];
-    setActiveView: (view: 'dashboard' | 'chat' | 'settings') => void;
+    setActiveView: (view: 'dashboard' | 'chat' | 'settings' | 'land') => void;
 };
 
-type SettingsSection = 'profile' | 'sharing' | 'blocked' | 'theme' | 'language' | 'privacy' | 'notifications' | 'account' | 'help';
+type SettingsSection = 'profile' | 'sharing' | 'blocked' | 'theme' | 'chatAppearance' | 'language' | 'privacy' | 'notifications' | 'account' | 'help';
 type SharingSubSection = 'myLink' | 'requests' | 'connect';
 
 const Toast: React.FC<{ message: string; onDismiss: () => void }> = ({ message, onDismiss }) => {
@@ -62,7 +66,7 @@ const Toast: React.FC<{ message: string; onDismiss: () => void }> = ({ message, 
 
 
 // Reusable components
-const SettingsHeader: React.FC<{ title: string; onBack: () => void }> = ({ title, onBack }) => (
+export const SettingsHeader: React.FC<{ title: string; onBack: () => void }> = ({ title, onBack }) => (
     <header className="flex items-center p-4 border-b border-gray-200 dark:border-gray-700 sticky top-0 bg-gray-50 dark:bg-gray-900 z-10">
         <button onClick={onBack} className="mr-4 p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" aria-label="Back">
             <ArrowLeftIcon className="w-6 h-6" />
@@ -96,6 +100,7 @@ const SettingsPage: React.FC<SettingsPageProps> = (props) => {
     const [status, setStatus] = useState(currentUser.status);
     const [isSaved, setIsSaved] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+    const cameraInputRef = useRef<HTMLInputElement>(null);
     
     const [toastMessage, setToastMessage] = useState<string | null>(null);
     const [connectLink, setConnectLink] = useState('');
@@ -130,6 +135,18 @@ const SettingsPage: React.FC<SettingsPageProps> = (props) => {
                     ...prev,
                     [CURRENT_USER_ID]: { ...prev[CURRENT_USER_ID], avatarUrl: newAvatarUrl }
                 }));
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+    
+    const handleBackgroundChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                const dataUrl = reader.result as string;
+                props.setChatSettings({ backgroundType: 'upload', backgroundValue: dataUrl });
             };
             reader.readAsDataURL(file);
         }
@@ -191,11 +208,12 @@ const SettingsPage: React.FC<SettingsPageProps> = (props) => {
         { id: 'sharing', icon: <UserPlusIcon className="w-6 h-6 text-purple-500"/>, title: t.shareProfile, desc: t.shareProfileDescription, badge: pendingRequestCount },
         { id: 'blocked', icon: <BlockIcon className="w-6 h-6 text-red-500"/>, title: t.blockedUsers, desc: t.blockedUsersDescription },
         { id: 'theme', icon: <MoonIcon className="w-6 h-6 text-indigo-500"/>, title: t.theme, desc: t.themeDescription },
+        { id: 'chatAppearance', icon: <PaintBrushIcon className="w-6 h-6 text-teal-500"/>, title: t.chatAppearance, desc: t.chatAppearanceDescription },
         { id: 'language', icon: <span className="text-xl font-bold">A/あ</span>, title: t.language, desc: t.languageDescription },
         { id: 'privacy', icon: <LockIcon className="w-6 h-6 text-gray-500"/>, title: t.privacy, desc: t.privacyDescription },
         { id: 'notifications', icon: <NotificationsIcon className="w-6 h-6 text-yellow-500"/>, title: t.notifications, desc: t.notificationsDescription },
-        { id: 'account', icon: <LogoutIcon className="w-6 h-6 text-orange-500"/>, title: t.account, desc: t.accountDescription },
         { id: 'help', icon: <HelpIcon className="w-6 h-6 text-green-500"/>, title: t.help, desc: t.helpDescription },
+        { id: 'account', icon: <LogoutIcon className="w-6 h-6 text-orange-500"/>, title: t.account, desc: t.accountDescription },
     ];
     
     const SimpleQRCode: React.FC<{value: string}> = ({value}) => (
@@ -416,112 +434,46 @@ const SettingsPage: React.FC<SettingsPageProps> = (props) => {
                         </div>
                     </div>
                 );
-            case 'language':
-                 return (
-                    <div>
-                        <SettingsHeader title={t.language} onBack={() => setActiveSection(null)} />
-                        <div className="p-6 space-y-4">
-                            <button onClick={() => props.setLanguage(Language.EN)} className={`w-full p-4 border-2 rounded-lg text-left ${props.language === Language.EN ? 'border-green-500' : 'border-transparent'}`}>
-                                <h4 className="font-bold">{t.english}</h4>
-                            </button>
-                             <button onClick={() => props.setLanguage(Language.RW)} className={`w-full p-4 border-2 rounded-lg text-left ${props.language === Language.RW ? 'border-green-500' : 'border-transparent'}`}>
-                                <h4 className="font-bold">{t.kinyarwanda}</h4>
-                            </button>
-                        </div>
-                    </div>
-                );
-            case 'privacy':
+            case 'chatAppearance':
                 return (
                     <div>
-                        <SettingsHeader title={t.privacy} onBack={() => setActiveSection(null)} />
-                        <div className="p-6 space-y-4">
-                            {[
-                                { key: 'contact', title: t.whoCanContactMe },
-                                { key: 'profilePhoto', title: t.whoCanSeeProfile },
-                                { key: 'status', title: t.whoCanSeeStatus }
-                            ].map(item => (
-                                <div key={item.key}>
-                                    <label className="block text-sm font-medium mb-2">{item.title}</label>
-                                    <select 
-                                        value={props.privacySettings[item.key as keyof PrivacySettings]} 
-                                        onChange={e => props.setPrivacySettings(prev => ({...prev, [item.key]: e.target.value}))}
-                                        className="w-full p-2 border rounded-md dark:bg-gray-700 dark:border-gray-600"
-                                    >
-                                        <option value="everyone">{t.everyone}</option>
-                                        <option value="contactsOnly">{t.contactsOnly}</option>
-                                        <option value="nobody">{t.nobody}</option>
-                                    </select>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                );
-            case 'notifications':
-                 return (
-                    <div>
-                        <SettingsHeader title={t.notifications} onBack={() => setActiveSection(null)} />
+                        <SettingsHeader title={t.chatBackground} onBack={() => setActiveSection(null)} />
                         <div className="p-6 space-y-6">
-                            <ToggleSwitch label={t.messageNotifications} checked={props.notificationSettings.messages} onChange={e => props.setNotificationSettings(p => ({...p, messages: e.target.checked}))} />
-                            <ToggleSwitch label={t.groupNotifications} checked={props.notificationSettings.groups} onChange={e => props.setNotificationSettings(p => ({...p, groups: e.target.checked}))} />
-                            <ToggleSwitch label={t.sound} checked={props.notificationSettings.sound} onChange={e => props.setNotificationSettings(p => ({...p, sound: e.target.checked}))} />
-                            <ToggleSwitch label={t.vibration} checked={props.notificationSettings.vibration} onChange={e => props.setNotificationSettings(p => ({...p, vibration: e.target.checked}))} />
-                        </div>
-                    </div>
-                );
-            case 'account':
-                 return (
-                    <div>
-                        <SettingsHeader title={t.account} onBack={() => setActiveSection(null)} />
-                        <div className="p-6 space-y-4">
-                            <button className="w-full flex items-center justify-center gap-2 p-3 bg-gray-200 dark:bg-gray-700 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
-                                <LogoutIcon className="w-5 h-5"/>
-                                <span>{t.logout}</span>
-                            </button>
-                             <button onClick={() => setDeleteConfirmModalOpen(true)} className="w-full flex items-center justify-center gap-2 p-3 bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-md hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors">
-                                <TrashIcon className="w-5 h-5"/>
-                                <span>{t.deleteAccount}</span>
-                            </button>
-                             {isDeleteConfirmModalOpen && (
-                                <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4" onClick={() => setDeleteConfirmModalOpen(false)}>
-                                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md p-6 text-center" onClick={e => e.stopPropagation()}>
-                                        <PlantIcon className="w-12 h-12 mx-auto text-red-500 mb-4"/>
-                                        <h3 className="font-bold text-lg mb-2">{t.deleteAccountConfirmationTitle}</h3>
-                                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">{t.deleteAccountConfirmationMessage}</p>
-                                        <div className="flex gap-4">
-                                             <button onClick={() => setDeleteConfirmModalOpen(false)} className="flex-1 p-2 bg-gray-200 dark:bg-gray-600 rounded-md">{t.cancel}</button>
-                                             <button onClick={handleDeleteAccount} className="flex-1 p-2 bg-red-600 text-white rounded-md">{t.delete}</button>
-                                        </div>
-                                    </div>
+                            <div>
+                                <h3 className="font-semibold text-lg mb-2">{t.solidColors}</h3>
+                                <div className="grid grid-cols-4 sm:grid-cols-6 gap-4">
+                                    {Object.entries(COLOR_BACKGROUNDS).map(([name, color]) => (
+                                        <button
+                                            key={name}
+                                            onClick={() => props.setChatSettings({ backgroundType: 'color', backgroundValue: color })}
+                                            className={`relative aspect-square rounded-lg border-4 transition-all ${
+                                                props.chatSettings.backgroundType === 'color' && props.chatSettings.backgroundValue === color
+                                                    ? 'border-green-500 scale-110'
+                                                    : 'border-transparent hover:border-gray-300'
+                                            }`}
+                                            style={{ backgroundColor: color }}
+                                            aria-label={name}
+                                        >
+                                            {props.chatSettings.backgroundType === 'color' && props.chatSettings.backgroundValue === color && (
+                                                <div className="absolute inset-0 flex items-center justify-center bg-black/10 rounded-sm">
+                                                    <CheckCircleIcon className="w-6 h-6 text-white" style={{ filter: 'drop-shadow(0 1px 1px rgb(0 0 0 / 0.5))'}} />
+                                                </div>
+                                            )}
+                                        </button>
+                                    ))}
                                 </div>
-                            )}
-                        </div>
-                    </div>
-                );
-            case 'help':
-                 return (
-                    <div>
-                        <SettingsHeader title={t.help} onBack={() => setActiveSection(null)} />
-                        <div className="p-6 space-y-3">
-                            {[{ title: t.faq}, { title: t.contactSupport}, { title: t.reportProblem }].map(item => (
-                                 <a key={item.title} href="#" className="w-full flex items-center justify-between p-4 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                                    <span>{item.title}</span>
-                                    <ChevronRightIcon className="w-5 h-5 text-gray-400"/>
-                                 </a>
-                            ))}
-                        </div>
-                    </div>
-                );
-            default:
-                return renderMainList();
-        }
-    };
-
-    return (
-        <div className="bg-gray-50 dark:bg-gray-900 min-h-[calc(100vh-128px)]">
-            {toastMessage && <Toast message={toastMessage} onDismiss={() => setToastMessage(null)} />}
-            {renderSectionContent()}
-        </div>
-    );
-};
-
-export default SettingsPage;
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-lg mb-2">{t.gradients}</h3>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                    {Object.entries(GRADIENT_BACKGROUNDS).map(([name, gradient]) => (
+                                        <button key={name} onClick={() => props.setChatSettings({ backgroundType: 'gradient', backgroundValue: gradient })} className={`aspect-video rounded-lg border-4 ${props.chatSettings.backgroundType === 'gradient' && props.chatSettings.backgroundValue === gradient ? 'border-green-500' : 'border-transparent'}`} style={{ backgroundImage: gradient }}>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <h3 className="font-semibold text-lg mb-2">{t.presetImages}</h3>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                    {Object.entries(PRESET_BACKGROUNDS).map(([name, url]) => (
+                                        <button key={name} onClick={() => props.setChatSettings({ backgroundType: 'preset', backgroundValue: url })} className={`aspect-video rounded-lg overflow

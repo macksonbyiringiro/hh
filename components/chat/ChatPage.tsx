@@ -1,5 +1,5 @@
 import React, { useState, useCallback, useMemo } from 'react';
-import { Translations, Language, Message, User, Conversation } from '../../types';
+import { Translations, Language, Message, User, Conversation, ChatSettings, MessagePayload } from '../../types';
 import { CURRENT_USER_ID, AI_USER_ID } from '../../constants';
 import ChatWindow from './ChatWindow';
 import NewChatModal from './NewChatModal';
@@ -14,6 +14,7 @@ interface ChatPageProps {
   users: Record<string, User>;
   conversations: Conversation[];
   setConversations: React.Dispatch<React.SetStateAction<Conversation[]>>;
+  chatSettings: ChatSettings;
 }
 
 const Avatar: React.FC<{ user: User }> = ({ user }) => (
@@ -45,7 +46,28 @@ const ConversationListItem: React.FC<{
     const avatarUser = conversation.type === 'group' ? ({ id: 'group', name: name!, role: 'Farmer', avatarColor: 'bg-gray-500', status: '', profileLinkToken: '', linkExpiry: 'never', isLinkActive: false, connectionRequests: [], rejectedUserIds: [] } as User) : displayUser;
     
     const lastMessage = conversation.messages[conversation.messages.length - 1];
-    const snippet = lastMessage ? `${lastMessage.senderId === currentUser.id ? 'You: ' : ''}${lastMessage.text}` : 'No messages yet';
+    let snippet = 'No messages yet';
+    if (lastMessage) {
+        const senderPrefix = lastMessage.senderId === currentUser.id ? 'You: ' : '';
+        switch(lastMessage.type) {
+            case 'text':
+                snippet = `${senderPrefix}${lastMessage.text}`;
+                break;
+            case 'image':
+                snippet = `${senderPrefix}🖼️ Image`;
+                break;
+            case 'video':
+                snippet = `${senderPrefix}📹 Video`;
+                break;
+            case 'audio':
+                snippet = `${senderPrefix}🎤 Voice message`;
+                break;
+            case 'system':
+                snippet = lastMessage.text ?? 'Chat started';
+                break;
+        }
+    }
+
 
     return (
         <button onClick={onClick} className={`w-full text-left p-3 flex items-center space-x-4 rounded-lg transition-colors duration-150 ${isActive ? 'bg-green-100 dark:bg-green-900/50' : 'hover:bg-gray-100 dark:hover:bg-gray-700/50'}`}>
@@ -69,7 +91,7 @@ const WelcomePlaceholder: React.FC<{ translations: Translations['chat'] }> = ({ 
     </div>
 );
 
-const ChatPage: React.FC<ChatPageProps> = ({ translations, language, users, conversations, setConversations }) => {
+const ChatPage: React.FC<ChatPageProps> = ({ translations, language, users, conversations, setConversations, chatSettings }) => {
     const [activeConversationId, setActiveConversationId] = useState<string | null>(null);
     const [isAiTyping, setIsAiTyping] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
@@ -91,7 +113,8 @@ const ChatPage: React.FC<ChatPageProps> = ({ translations, language, users, conv
                 id: `msg-${Date.now()}`,
                 senderId: 'system',
                 text: translations.chat.chatStartedSystemMessage.replace('{0}', users[userId].name),
-                timestamp: new Date().toISOString()
+                timestamp: new Date().toISOString(),
+                type: 'system'
             }],
         };
         
@@ -105,14 +128,14 @@ const ChatPage: React.FC<ChatPageProps> = ({ translations, language, users, conv
         return conversations.find(c => c.id === activeConversationId);
     }, [activeConversationId, conversations]);
 
-    const handleSendMessage = useCallback(async (text: string) => {
+    const handleSendMessage = useCallback(async (payload: MessagePayload) => {
         if (!activeConversation) return;
 
         const newMessage: Message = {
             id: `msg-${Date.now()}`,
-            text,
             senderId: CURRENT_USER_ID,
             timestamp: new Date().toISOString(),
+            ...payload
         };
 
         const updatedConversations = conversations.map(c =>
@@ -120,7 +143,11 @@ const ChatPage: React.FC<ChatPageProps> = ({ translations, language, users, conv
         );
         setConversations(updatedConversations);
 
-        if (activeConversation.participants.includes(AI_USER_ID) && isConfigured()) {
+        const shouldTriggerAi = activeConversation.participants.includes(AI_USER_ID) 
+                                && isConfigured()
+                                && payload.type === 'text';
+
+        if (shouldTriggerAi) {
             setIsAiTyping(true);
             const currentMessages = updatedConversations.find(c => c.id === activeConversationId)!.messages;
             
@@ -131,6 +158,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ translations, language, users, conv
                     text: aiResponseText,
                     senderId: AI_USER_ID,
                     timestamp: new Date().toISOString(),
+                    type: 'text'
                 };
 
                 setConversations(prev => prev.map(c =>
@@ -143,6 +171,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ translations, language, users, conv
                     text: "Sorry, I couldn't connect. Please check your connection or API key.",
                     senderId: AI_USER_ID,
                     timestamp: new Date().toISOString(),
+                    type: 'text'
                 };
                  setConversations(prev => prev.map(c =>
                     c.id === activeConversationId ? { ...c, messages: [...c.messages, errorMessage] } : c
@@ -233,6 +262,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ translations, language, users, conv
                         users={users}
                         isAiTyping={isAiTyping && activeConversation.participants.includes(AI_USER_ID)}
                         onBack={() => setActiveConversationId(null)}
+                        chatSettings={chatSettings}
                     />
                 ) : (
                     <WelcomePlaceholder translations={translations.chat} />

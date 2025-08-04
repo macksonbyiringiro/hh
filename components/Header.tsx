@@ -6,6 +6,8 @@ import { SunIcon } from './icons/SunIcon';
 import { DashboardIcon } from './icons/DashboardIcon';
 import { ChatIcon } from './icons/ChatIcon';
 import { SettingsIcon } from './icons/SettingsIcon';
+import { MapIcon } from './icons/MapIcon';
+import { CommunityIcon } from './icons/CommunityIcon';
 
 interface HeaderProps {
     language: Language;
@@ -15,10 +17,12 @@ interface HeaderProps {
         language: string;
         dashboard: string;
         chat: string;
+        community: string;
         settings: string;
+        findLand: string;
     };
-    activeView: 'dashboard' | 'chat' | 'settings';
-    setActiveView: (view: 'dashboard' | 'chat' | 'settings') => void;
+    activeView: 'dashboard' | 'chat' | 'settings' | 'land' | 'community';
+    setActiveView: (view: 'dashboard' | 'chat' | 'settings' | 'land' | 'community') => void;
     theme: 'light' | 'dark';
     toggleTheme: () => void;
     pendingRequestCount: number;
@@ -90,6 +94,8 @@ export const Header: React.FC<HeaderProps> = ({ language, setLanguage, translati
                     <div className="hidden sm:flex items-center space-x-4">
                         <NavItem label={translations.dashboard} isActive={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} icon={<DashboardIcon className="h-5 w-5" />} />
                         <NavItem label={translations.chat} isActive={activeView === 'chat'} onClick={() => setActiveView('chat')} icon={<ChatIcon className="h-5 w-5" />} />
+                        <NavItem label={translations.community} isActive={activeView === 'community'} onClick={() => setActiveView('community')} icon={<CommunityIcon className="h-5 w-5" />} />
+                        <NavItem label={translations.findLand} isActive={activeView === 'land'} onClick={() => setActiveView('land')} icon={<MapIcon className="h-5 w-5" />} />
                         <NavItem label={translations.settings} isActive={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<SettingsIcon className="h-5 w-5" />} badgeCount={pendingRequestCount}/>
                     </div>
 
@@ -126,6 +132,8 @@ export const Header: React.FC<HeaderProps> = ({ language, setLanguage, translati
             <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 border-t dark:border-gray-700 flex justify-around p-1 z-20">
                  <MobileNavItem label={translations.dashboard} isActive={activeView === 'dashboard'} onClick={() => setActiveView('dashboard')} icon={<DashboardIcon className="h-6 w-6" />} />
                  <MobileNavItem label={translations.chat} isActive={activeView === 'chat'} onClick={() => setActiveView('chat')} icon={<ChatIcon className="h-6 w-6" />} />
+                 <MobileNavItem label={translations.community} isActive={activeView === 'community'} onClick={() => setActiveView('community')} icon={<CommunityIcon className="h-6 w-6" />} />
+                 <MobileNavItem label={translations.findLand} isActive={activeView === 'land'} onClick={() => setActiveView('land')} icon={<MapIcon className="h-6 w-6" />} />
                  <MobileNavItem label={translations.settings} isActive={activeView === 'settings'} onClick={() => setActiveView('settings')} icon={<SettingsIcon className="h-6 w-6" />} badgeCount={pendingRequestCount}/>
             </div>
         </header>

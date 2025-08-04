@@ -3,6 +3,7 @@ import { Crop, Language } from '../../types';
 import { CROP_OPTIONS } from '../../constants';
 import { generateFarmingTipStream, isConfigured } from '../../services/geminiService';
 import { TipDisplay } from '../TipDisplay';
+import { Card } from './Card';
 
 interface FarmingTipsProps {
     translations: {
@@ -57,8 +58,7 @@ export const FarmingTips: React.FC<FarmingTipsProps> = ({ translations, language
     }, [selectedCrop, language, translations.error]);
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8 border border-gray-100 dark:border-gray-700">
-            <h2 className="text-xl sm:text-2xl font-bold text-green-800 dark:text-green-300 mb-4">{translations.title}</h2>
+        <Card title={translations.title}>
             <div className="space-y-6">
                 <div>
                     <label htmlFor="crop-select" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -96,6 +96,6 @@ export const FarmingTips: React.FC<FarmingTipsProps> = ({ translations, language
                      </div>
                 )}
             </div>
-        </div>
+        </Card>
     );
 };

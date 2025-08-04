@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Chat } from "@google/genai";
 import { Crop, Language, Message } from "../types";
 
@@ -55,10 +56,10 @@ interface GeminiHistoryItem {
 
 const buildGeminiHistory = (messages: Message[], aiUserId: string): GeminiHistoryItem[] => {
     return messages
-        .filter(msg => msg.senderId !== 'system') // ignore system messages
+        .filter(msg => msg.type === 'text')
         .map(msg => ({
             role: msg.senderId === aiUserId ? 'model' : 'user',
-            parts: [{ text: msg.text }]
+            parts: [{ text: msg.text! }]
         }));
 };
 
@@ -90,7 +91,7 @@ export const getAiChatResponse = async (conversationId: string, messages: Messag
     }
     
     try {
-        const response = await chat.sendMessage({ message: lastMessage.text });
+        const response = await chat.sendMessage({ message: lastMessage.text! });
         return response.text;
     } catch (error) {
         console.error("Error getting AI chat response:", error);
